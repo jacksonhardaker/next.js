@@ -3,6 +3,11 @@ import { useReducer, useContext, createContext } from 'react'
 const SkipLinksDispatchContext = createContext()
 const SkipLinksStateContext = createContext()
 
+const sortLinks = (links) =>
+  links.sort((a, b) =>
+    a.position < b.position ? -1 : a.position > b.position ? 1 : 0
+  )
+
 function reducer(state, { type, payload }) {
   switch (type) {
     case 'REGISTER':
@@ -10,16 +15,19 @@ function reducer(state, { type, payload }) {
         (skipPoint) => skipPoint.targetId === payload.targetId
       )
       return exists
-        ? state
-        : [
+        ? sortLinks(
+            state.map((skipPoint) =>
+              skipPoint.targetId === payload.targetId
+                ? Object.assign(skipPoint, payload)
+                : skipPoint
+            )
+          )
+        : sortLinks([
             ...state,
             {
               ...payload, // Order by position in the document
-              position: payload.ref.getBoundingClientRect().top,
             },
-          ].sort((a, b) =>
-            a.position < b.position ? -1 : a.position > b.position ? 1 : 0
-          )
+          ])
     case 'CLEAR':
       return []
     default:
@@ -27,8 +35,8 @@ function reducer(state, { type, payload }) {
   }
 }
 
-export function WithSkipLinks({ children }) {
-  const [state, dispatch] = useReducer(reducer, [])
+export function WithSkipLinks({ children, defaultSkipLinks }) {
+  const [state, dispatch] = useReducer(reducer, defaultSkipLinks || [])
 
   return (
     <SkipLinksStateContext.Provider value={state}>
@@ -50,7 +58,7 @@ export function useSkipLinkActions() {
           type: 'REGISTER',
           payload: {
             ...skipPoint,
-            ref,
+            position: ref.getBoundingClientRect().top,
           },
         })
         ref.id = skipPoint.targetId

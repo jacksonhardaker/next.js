@@ -9,6 +9,7 @@ import styles from './Layout.module.css'
 const pages = [
   { href: '/', name: 'Home' },
   { href: '/custom', name: 'Page Specific Skip Links' },
+  { href: '/ssr', name: 'Page with SSR Skip Links' },
 ]
 
 export function Layout({ children }) {
